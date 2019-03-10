@@ -1,25 +1,33 @@
 from unittest.mock import Mock, patch
-from nose.tools import assert_is_none, assert_list_equal
-from test003.services import get_todos
+from nose.tools import assert_list_equal, assert_true
+from test003.services import get_uncompleted_todos
 
 
-@patch('test003.services.requests.get')
-def test_getting_todos_when_response_is_ok(mock_get):
-    todos = [{
+@patch('test003.services.get_todos')
+def test_getting_uncompleted_todos_when_todos_is_not_none(mock_get_todos):
+    todo1 = {
         'userId': 1,
         'id': 1,
         'title': 'Make the bed',
         'completed': False
-    }]
+    }
+    todo2 = {
+        'userId': 1,
+        'id': 2,
+        'title': 'Walk the dog',
+        'completed': True
+    }
 
-    mock_get.return_value = Mock(ok=True)
-    mock_get.return_value.json.return_value = todos
-    response = get_todos()
-    assert_list_equal(response.json(), todos)
+    mock_get_todos.return_value = Mock()
+    mock_get_todos.return_value.json.return_value = [todo1, todo2]
+    uncompleted_todos = get_uncompleted_todos()
+    assert_true(mock_get_todos.called)
+    assert_list_equal(uncompleted_todos, [todo1])
 
 
-@patch('test003.services.requests.get')
-def test_getting_todos_when_response_is_not_ok(mock_get):
-    mock_get.return_value.ok = False
-    response = get_todos()
-    assert_is_none(response)
+@patch('test003.services.get_todos')
+def test_getting_uncompleted_todos_when_todos_is_none(mock_get_todos):
+    mock_get_todos.return_value = None
+    uncompleted_todos = get_uncompleted_todos()
+    assert_true(mock_get_todos.called)
+    assert_list_equal(uncompleted_todos, [])
